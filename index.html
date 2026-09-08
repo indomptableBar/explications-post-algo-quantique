@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Algorithmes Post-Quantiques - Chiffrement de Certificats sous Linux</title>
+    <style>
+        :root {
+            --primary: #0f172a;
+            --accent: #6366f1;
+            --accent-light: #818cf8;
+            --bg: #020617;
+            --surface: #0f172a;
+            --surface-hover: #1e293b;
+            --border: #1e293b;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, #1a1a3e 50%, var(--primary) 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, var(--accent-light), #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        nav {
+            position: sticky;
+            top: 0;
+            background: rgba(2, 6, 23, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            z-index: 100;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 0.5rem;
+            max-width: 1100px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        nav a {
+            color: var(--text-muted);
+            text-decoration: none;
+            padding: 0.4rem 1rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        nav a:hover {
+            color: var(--accent-light);
+            background: var(--surface);
+        }
+
+        section {
+            margin: 3rem 0;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            color: var(--accent-light);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--border);
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            color: var(--text);
+            margin: 1.5rem 0 0.8rem;
+        }
+
+        p { margin-bottom: 1rem; color: var(--text); }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            transition: border-color 0.2s;
+        }
+
+        .card:hover {
+            border-color: var(--accent);
+        }
+
+        .card h3 {
+            margin-top: 0;
+            color: var(--accent-light);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        pre {
+            background: #0a0e1a;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.2rem;
+            overflow-x: auto;
+            font-size: 0.88rem;
+            line-height: 1.6;
+            margin: 1rem 0;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+            color: #e2e8f0;
+        }
+
+        .inline-code {
+            background: var(--surface-hover);
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-light);
+        }
+
+        .cmd { color: var(--success); }
+        .comment { color: #64748b; font-style: italic; }
+        .flag { color: var(--warning); }
+        .output { color: var(--text-muted); }
+        .string { color: #f472b6; }
+        .key { color: #facc15; }
+        .number { color: #fb923c; }
+
+        .alert {
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            border-left: 4px solid;
+        }
+
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: var(--warning);
+        }
+
+        .alert-info {
+            background: rgba(99, 102, 241, 0.1);
+            border-color: var(--accent);
+        }
+
+        .alert-success {
+            background: rgba(34, 197, 94, 0.1);
+            border-color: var(--success);
+        }
+
+        .alert-danger {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: var(--danger);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        th, td {
+            padding: 0.8rem 1rem;
+            text-align: left;
+            border: 1px solid var(--border);
+        }
+
+        th {
+            background: var(--surface-hover);
+            color: var(--accent-light);
+            font-weight: 600;
+        }
+
+        tr:hover { background: var(--surface); }
+
+        ol, ul {
+            padding-left: 1.5rem;
+            margin: 0.5rem 0 1rem;
+        }
+
+        li { margin-bottom: 0.4rem; }
+
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.7rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-new { background: rgba(34, 197, 94, 0.2); color: var(--success); }
+        .badge-stable { background: rgba(99, 102, 241, 0.2); color: var(--accent-light); }
+        .badge-experimental { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+
+        .step {
+            display: flex;
+            gap: 1.2rem;
+            margin: 1.5rem 0;
+        }
+
+        .step-num {
+            flex-shrink: 0;
+            width: 36px;
+            height: 36px;
+            background: var(--accent);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .step-content { flex: 1; }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 3rem;
+        }
+
+        a { color: var(--accent-light); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        @media (max-width: 768px) {
+            header h1 { font-size: 1.6rem; }
+            .grid { grid-template-columns: 1fr; }
+            pre { font-size: 0.78rem; padding: 0.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>&#128274; Algorithmes Post-Quantiques pour Certificats</h1>
+    <p>Guide complet : comprendre, installer et utiliser des algorithmes résistants aux ordinateurs quantiques pour chiffrer vos certificats numériques sous Linux</p>
+</header>
+
+<nav>
+    <ul>
+        <li><a href="#introduction">Introduction</a></li>
+        <li><a href="#menace">Menace quantique</a></li>
+        <li><a href="#algos">Algorithmes PQC</a></li>
+        <li><a href="#nist">Normes NIST</a></li>
+        <li><a href="#installation">Installation</a></li>
+        <li><a href="#certificats">Certificats SSL/TLS</a></li>
+        <li><a href="#chiffrement">Chiffrement</a></li>
+        <li><a href="#ssh">SSH</a></li>
+        <li><a href="#tls13">TLS 1.3</a></li>
+        <li><a href="#openssl40">OpenSSL 4.0+</a></li>
+        <li><a href="#commandes">Commandes</a></li>
+        <li><a href="#bonnes-pratiques">Bonnes pratiques</a></li>
+    </ul>
+</nav>
+
+<div class="container">
+
+    <!-- INTRODUCTION -->
+    <section id="introduction">
+        <h2>1. Introduction</h2>
+        <p>Les <strong>algorithmes post-quantiques</strong> (PQC) sont des algorithmes cryptographiques conçus pour résister aux attaques menées par des ordinateurs quantiques. Avec l'avancement de l'informatique quantique, les algorithmes classiques comme RSA et ECC deviennent vulnérables. Ce guide vous explique comment migrer vers des algorithmes post-quantiques pour protéger vos certificats numériques sous Linux.</p>
+
+        <div class="alert alert-info">
+            <strong>&#128161; Pourquoi agir maintenant ?</strong><br>
+            La stratégie "Harvest Now, Decrypt Later" signifie que les données chiffrées aujourd'hui avec RSA/ECC pourraient être déchiffrées demain par un ordinateur quantique. Il est crucial de migrer vers des algorithmes PQC dès maintenant.
+        </div>
+
+        <div class="card">
+            <h3>Prérequis</h3>
+            <ul>
+                <li>Système Linux (Ubuntu 24.04+, Debian 12+, Fedora 40+, ou distributions récentes)</li>
+                <li>Accès root ou sudo</li>
+                <li>Connexion Internet pour l'installation des paquets</li>
+                <li>Connaissances de base en cryptographie et gestion de certificats</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- MENACE QUANTIQUE -->
+    <section id="menace">
+        <h2>2. Comprendre la menace quantique</h2>
+
+        <div class="grid">
+            <div class="card">
+                <h3>&#129504; Algorithmes classiques</h3>
+                <p><strong>RSA</strong> repose sur la factorisation de grands nombres. <strong>ECC</strong> repose sur le problème du logarithme discret elliptique. Un ordinateur quantique suffisamment puissant pourrait résoudre ces problèmes avec l'algorithme de <strong>Shor</strong>.</p>
+            </div>
+            <div class="card">
+                <h3>&#9889; Impact de Shor</h3>
+                <p>L'algorithme de Shor peut factoriser un nombre à 2048 bits en quelques heures sur un ordinateur quantique. Cela briserait RSA-2048, ECDSA, et ECDH utilisés dans la majorité des certificats TLS actuels.</p>
+            </div>
+            <div class="card">
+                <h3>&#128737; Grover aussi menace AES</h3>
+                <p>L'algorithme de Grover divise par 2 la sécurité des fonctions de hachage et du chiffrement symétrique. AES-128 devient aussi sûr qu'AES-64 classique. Solution : passer à AES-256.</p>
+            </div>
+        </div>
+
+        <div class="alert alert-danger">
+            <strong>&#9888; Timeline estimée :</strong> Les experts estiment qu'un ordinateur quantique capable de casser RSA-2048 pourrait apparaître entre 2030 et 2040. Les données sensibles avec une durée de vie supérieure doivent être protégées dès maintenant.
+        </div>
+    </section>
+
+    <!-- ALGORITHMES PQC -->
+    <section id="algos">
+        <h2>3. Principaux algorithmes post-quantiques</h2>
+        <p>Voici les principales familles d'algorithmes post-quantiques :</p>
+
+        <div class="grid">
+            <div class="card">
+                <h3>&#128279; Cristal-Kyber <span class="badge badge-stable">Standard NIST</span></h3>
+                <p><strong>Type :</strong> Encapsulation de clé (KEM)<br>
+                <strong>Famille :</strong> Réseaux euclidiens<br>
+                <strong>Usage :</strong> Échange de clés, chiffrement de certificats<br>
+                <strong>Tailles :</strong> Kyber-512 (NIST Level 1), Kyber-768 (NIST Level 3), Kyber-1024 (NIST Level 5)</p>
+            </div>
+            <div class="card">
+                <h3>&#128273; Crystal-Dilithium <span class="badge badge-stable">Standard NIST</span></h3>
+                <p><strong>Type :</strong> Signature numérique<br>
+                <strong>Famille :</strong> Réseaux euclidiens<br>
+                <strong>Usage :</strong> Signatures de certificats, code signing<br>
+                <strong>Tailles :</strong> Dilithium2, Dilithium3, Dilithium5</p>
+            </div>
+            <div class="card">
+                <h3>&#9997; Falcon <span class="badge badge-stable">Standard NIST</span></h3>
+                <p><strong>Type :</strong> Signature numérique<br>
+                <strong>Famille :</strong> NTRU / Réseaux euclidiens<br>
+                <strong>Avantage :</strong> Signatures plus compactes que Dilithium<br>
+                <strong>Inconvénient :</strong> Implémentation plus complexe</p>
+            </div>
+            <div class="card">
+                <h3>&#128275; SPHINCS+ <span class="badge badge-stable">Standard NIST</span></h3>
+                <p><strong>Type :</strong> Signature numérique (basée sur le hachage)<br>
+                <strong>Famille :</strong> Hash-based signatures<br>
+                <strong>Avantage :</strong> Hypothèses de sécurité minimales<br>
+                <strong>Inconvénient :</strong> Signatures et clés plus volumineuses</p>
+            </div>
+            <div class="card">
+                <h3>&#128176; ML-KEM <span class="badge badge-new">FIPS 203</span></h3>
+                <p><strong>Type :</strong> Module-Lattice KEM<br>
+                <strong>Note :</strong> Standardisation officielle de Kyber par le NIST<br>
+                <strong>Implémentations :</strong> OpenSSL 4.0+, BoringSSL, liboqs</p>
+            </div>
+            <div class="card">
+                <h3>&#128273; ML-DSA <span class="badge badge-new">FIPS 204</span></h3>
+                <p><strong>Type :</strong> Module-Lattice Signature<br>
+                <strong>Note :</strong> Standardisation officielle de Dilithium par le NIST<br>
+                <strong>Implémentations :</strong> OpenSSL 4.0+, BoringSSL, liboqs</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- NIST -->
+    <section id="nist">
+        <h2>4. Standards NIST (FIPS)</h2>
+        <p>Le NIST a finalisé en 2024 les premiers standards post-quantiques :</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Standard</th>
+                    <th>Algorithme</th>
+                    <th>Usage</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>FIPS 203</td>
+                    <td>ML-KEM (Module-Lattice KEM)</td>
+                    <td>Échange de clés</td>
+                    <td>Août 2024</td>
+                </tr>
+                <tr>
+                    <td>FIPS 204</td>
+                    <td>ML-DSA (Module-Lattice Sig)</td>
+                    <td>Signature numérique</td>
+                    <td>Août 2024</td>
+                </tr>
+                <tr>
+                    <td>FIPS 205</td>
+                    <td>SLH-DSA (SPHINCS+)</td>
+                    <td>Signature basée sur hachage</td>
+                    <td>Août 2024</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- INSTALLATION -->
+    <section id="installation">
+        <h2>5. Installation sous Linux</h2>
+
+        <h3>5.1 OpenSSL 4.0+ avec support PQC</h3>
+        <p>OpenSSL 3.5 (et suivants) intègre le support natif des algorithmes post-quantiques ML-KEM et ML-DSA.</p>
+
+        <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-content">
+                <h4>Installer OpenSSL 4.0+ depuis les dépôts</h4>
+<pre><code><span class="comment"># Ubuntu / Debian</span>
+<span class="cmd">sudo apt update</span>
+<span class="cmd">sudo apt install</span> <span class="flag">-y</span> openssl libssl-dev
+
+<span class="comment"># Vérifier la version</span>
+<span class="cmd">openssl</span> version
+<span class="comment"># Devrait afficher: OpenSSL 3.x.x ou supérieur</span></code></pre>
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-content">
+                <h4>Compiler OpenSSL depuis les sources (si nécessaire)</h4>
+<pre><code><span class="comment"># Installer les dépendances de compilation</span>
+<span class="cmd">sudo apt install</span> <span class="flag">-y</span> build-essential perl zlib1g-dev
+
+<span class="comment"># Télécharger et compiler OpenSSL 3.5</span>
+<span class="cmd">wget</span> <span class="string">https://github.com/openssl/openssl/releases/download/openssl-3.5.0/openssl-3.5.0.tar.gz</span>
+<span class="cmd">tar</span> <span class="flag">-xzf</span> openssl-3.5.0.tar.gz
+<span class="cmd">cd</span> openssl-3.5.0
+<span class="cmd">./Configure</span> <span class="flag">--prefix=/usr/local/openssl</span> <span class="flag">enable-ktls</span> <span class="flag">enable-ec_nistp_64_gcc_128</span>
+<span class="cmd">make</span> <span class="flag">-j$(nproc)</span>
+<span class="cmd">sudo make install</span>
+
+<span class="comment"># Mettre à jour le PATH</span>
+<span class="cmd">echo</span> <span class="string">'export PATH=/usr/local/openssl/bin:$PATH'</span> | <span class="cmd">sudo tee</span> /etc/profile.d/openssl.sh
+<span class="cmd">source</span> /etc/profile.d/openssl.sh</code></pre>
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-content">
+                <h4>Vérifier le support PQC dans OpenSSL</h4>
+<pre><code><span class="comment"># Lister les algorithmes KEM disponibles</span>
+<span class="cmd">openssl</span> list <span class="flag">-kem-algorithms</span> 2&gt;/dev/null | <span class="cmd">grep</span> <span class="flag">-i</span> kem
+
+<span class="comment"># Lister les algorithmes de signature</span>
+<span class="cmd">openssl</span> list <span class="flag">-signature-algorithms</span> 2&gt;/dev/null | <span class="cmd">grep</span> <span class="flag">-iE</span> <span class="string">"ml-dilithium|falcon|sphincs|mldsa"</span>
+
+<span class="comment"># Vérifier les algorithmes supportés</span>
+<span class="cmd">openssl</span> list <span class="flag">-public-key-algorithms</span> | <span class="cmd">grep</span> <span class="flag">-i</span> <span class="string">"kem\|mldsa\|falcon"</span></code></pre>
+            </div>
+        </div>
+
+        <h3>5.2 Liboqs (Open Quantum Safe)</h3>
+        <p>La bibliothèque <strong>liboqs</strong> fournit une collection d'implémentations d'algorithmes PQC pour des tests et évaluations.</p>
+
+<pre><code><span class="comment"># Installer les dépendances</span>
+<span class="cmd">sudo apt install</span> <span class="flag">-y</span> cmake gcc g++ git libssl-dev
+
+<span class="comment"># Cloner et compiler liboqs</span>
+<span class="cmd">git clone</span> <span class="string">https://github.com/open-quantum-safe/liboqs.git</span>
+<span class="cmd">cd</span> liboqs
+<span class="cmd">mkdir</span> build && <span class="cmd">cd</span> build
+<span class="cmd">cmake</span> <span class="flag">-DCMAKE_INSTALL_PREFIX=/usr/local</span> <span class="flag">-DBUILD_SHARED_LIBS=ON</span> ..
+<span class="cmd">make</span> <span class="flag">-j$(nproc)</span>
+<span class="cmd">sudo make install</span>
+
+<span class="comment"># Mettre à jour le cache des bibliothèques</span>
+<span class="cmd">sudo ldconfig</span></code></pre>
+
+        <h3>5.3 OQS-OpenSSL (fork PQC)</h3>
+<pre><code><span class="comment"># Cloner le fork OpenSSL avec support PQC complet</span>
+<span class="cmd">git clone</span> <span class="string">https://github.com/open-quantum-safe/openssl.git</span> oqs-openssl
+<span class="cmd">cd</span> oqs-openssl
+<span class="cmd">./Configure</span> <span class="flag">--prefix=/usr/local/oqs-openssl</span> <span class="flag">enable-oqs</span>
+<span class="cmd">make</span> <span class="flag">-j$(nproc)</span>
+<span class="cmd">sudo make install</span></code></pre>
+    </section>
+
+    <!-- CERTIFICATS SSL/TLS -->
+    <section id="certificats">
+        <h2>6. Générer des certificats avec algorithmes PQC</h2>
+
+        <h3>6.1 Générer une clé et un certificat auto-signé avec ML-DSA</h3>
+        <p>ML-DSA (FIPS 204) est la standardisation de Dilithium pour les signatures numériques.</p>
+
+<pre><code><span class="comment"># Générer une clé privée ML-DSA (Dilithium)</span>
+<span class="cmd">openssl</span> genpkey <span class="flag">-algorithm</span> <span class="key">mldsa44</span> <span class="flag">-out</span> <span class="string">server_mldsa44.key</span>
+<span class="comment"># mldsa44 = Dilithium2 (NIST Level 1)</span>
+<span class="comment"># mldsa65 = Dilithium3 (NIST Level 3)</span>
+<span class="comment"># mldsa87 = Dilithium5 (NIST Level 5)</span>
+
+<span class="comment"># Générer le CSR (Certificate Signing Request)</span>
+<span class="cmd">openssl</span> req <span class="flag">-new</span> <span class="flag">-key</span> server_mldsa44.key <span class="flag">-out</span> server_mldsa44.csr \
+    <span class="flag">-subj</span> <span class="string">"/C=FR/ST=Ile-de-France/L=Paris/O=MonOrganisme/CN=example.com"</span>
+
+<span class="comment"># Auto-signer le certificat</span>
+<span class="cmd">openssl</span> x509 <span class="flag">-req</span> <span class="flag">-in</span> server_mldsa44.csr \
+    <span class="flag">-signkey</span> server_mldsa44.key \
+    <span class="flag">-out</span> server_mldsa44.crt \
+    <span class="flag">-days</span> <span class="number">365</span>
+
+<span class="comment"># Vérifier le certificat</span>
+<span class="cmd">openssl</span> x509 <span class="flag">-in</span> server_mldsa44.crt <span class="flag">-text</span> <span class="flag">-noout</span> | <span class="cmd">head</span> <span class="flag">-20</span></code></pre>
+
+        <h3>6.2 Générer un certificat avec Falcon</h3>
+<pre><code><span class="comment"># Clé Falcon-512</span>
+<span class="cmd">openssl</span> genpkey <span class="flag">-algorithm</span> <span class="key">falcon512</span> <span class="flag">-out</span> <span class="string">server_falcon512.key</span>
+
+<span class="comment"># Clé Falcon-1024</span>
+<span class="cmd">openssl</span> genpkey <span class="flag">-algorithm</span> <span class="key">falcon1024</span> <span class="flag">-out</span> <span class="string">server_falcon1024.key</span>
+
+<span class="comment"># CSR et auto-signature</span>
+<span class="cmd">openssl</span> req <span class="flag">-new</span> <span class="flag">-key</span> server_falcon512.key <span class="flag">-out</span> server_falcon512.csr \
+    <span class="flag">-subj</span> <span class="string">"/CN=example.com"</span>
+<span class="cmd">openssl</span> x509 <span class="flag">-req</span> <span class="flag">-in</span> server_falcon512.csr \
+    <span class="flag">-signkey</span> server_falcon512.key \
+    <span class="flag">-out</span> server_falcon512.crt <span class="flag">-days</span> <span class="number">365</span></code></pre>
+
+        <h3>6.3 Générer un certificat avec SPHINCS+</h3>
+<pre><code><span class="comment"># Clé SPHINCS+ (basée sur le hachage, plus lente mais très sécurisée)</span>
+<span class="cmd">openssl</span> genpkey <span class="flag">-algorithm</span> <span class="key">sphincssha2128fsimple</span> <span class="flag">-out</span> <span class="string">server_sphincs.key</span>
+
+<span class="comment"># CSR et auto-signature</span>
+<span class="cmd">openssl</span> req <span class="flag">-new</span> <span class="flag">-key</span> server_sphincs.key <span class="flag">-out</span> server_sphincs.csr \
+    <span class="flag">-subj</span> <span class="string">"/CN=example.com"</span>
+<span class="cmd">openssl</span> x509 <span class="flag">-req</span> <span class="flag">-in</span> server_sphincs.csr \
+    <span class="flag">-signkey</span> server_sphincs.key \
+    <span class="flag">-out</span> server_sphincs.crt <span class="flag">-days</span> <span class="number">365</span></code></pre>
+
+        <h3>6.4 Comparaison des tailles</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Algorithme</th>
+                    <th>Taille clé privée</th>
+                    <th>Taille clé publique</th>
+                    <th>Taille signature</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>RSA-2048 (classique)</td>
+                    <td>~1.2 Ko</td>
+                    <td>~256 octets</td>
+                    <td>~256 octets</td>
+                </tr>
+                <tr>
+                    <td>ECDSA P-256 (classique)</td>
+                    <td>~32 octets</td>
+                    <td>~65 octets</td>
+                    <td>~72 octets</td>
+                </tr>
+                <tr>
+                    <td>ML-DSA-44 (mldsa44)</td>
+                    <td>~2.5 Ko</td>
+                    <td>~1.3 Ko</td>
+                    <td>~2.4 Ko</td>
+                </tr>
+                <tr>
+                    <td>ML-DSA-65 (mldsa65)</td>
+                    <td>~4 Ko</td>
+                    <td>~1.9 Ko</td>
+                    <td>~3.3 Ko</td>
+                </tr>
+                <tr>
+                    <td>Falcon-512</td>
+                    <td>~1.3 Ko</td>
+                    <td>~896 octets</td>
+                    <td>~666 octets</td>
+                </tr>
+                <tr>
+                    <td>Falcon-1024</td>
+                    <td>~2.3 Ko</td>
+                    <td>~1.8 Ko</td>
+                    <td>~1.3 Ko</td>
+                </tr>
+                <tr>
+                    <td>SPHINCS+-128f</td>
+                    <td>~64 octets (seed)</td>
+                    <td>~32 octets</td>
+                    <td>~17 Ko</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- CHIFFREMENT -->
+    <section id="chiffrement">
+        <h2>7. Chiffrement de certificats avec ML-KEM (Kyber)</h2>
+        <p>ML-KEM (FIPS 203) est l'algorithme standardisé d'encapsulation de clé pour l'échange de clés. Il peut chiffrer des données comme des certificats.</p>
+
+        <h3>7.1 Chiffrer un certificat avec ML-KEM</h3>
+
+        <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-content">
+                <h4>Générer une paire de clés ML-KEM</h4>
+<pre><code><span class="comment"># Générer une clé ML-KEM-768 (recommandé)</span>
+<span class="cmd">openssl</span> genpkey <span class="flag">-algorithm</span> <span class="key">ML-KEM-768</span> <span class="flag">-out</span> <span class="string">kem_priv.pem</span>
+<span class="comment"># Niveaux disponibles :</span>
+<span class="comment"># ML-KEM-512  = NIST Level 1</span>
+<span class="comment"># ML-KEM-768  = NIST Level 3 (recommandé)</span>
+<span class="comment"># ML-KEM-1024 = NIST Level 5</span>
+
+<span class="comment"># Extraire la clé publique</span>
+<span class="cmd">openssl</span> pkey <span class="flag">-in</span> kem_priv.pem <span class="flag">-pubout</span> <span class="flag">-out</span> kem_pub.pem</code></pre>
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-content">
+                <h4>Chiffrer un fichier certificat</h4>
+<pre><code><span class="comment"># Créer un certificat de test</span>
+<span class="cmd">openssl</span> req <span class="flag">-x509</span> <span class="flag">-newkey</span> rsa:<span class="number">2048</span> <span class="flag">-keyout</span> /dev/null \
+    <span class="flag">-out</span> <span class="string">mon_certificat.pem</span> <span class="flag">-days</span> <span class="number">365</span> <span class="flag">-nodes</span> \
+    <span class="flag">-subj</span> <span class="string">"/CN=test.example.com"</span>
+
+<span class="comment"># Chiffrer le certificat avec ML-KEM</span>
+<span class="cmd">openssl</span> pkeyutl <span class="flag">-encap</span> <span class="flag">-inkey</span> kem_pub.pem \
+    <span class="flag">-out</span> <span class="string">cert_chiffre.bin</span> \
+    <span class="flag">-secret</span> <span class="string">secret.bin</span>
+
+<span class="comment"># Utiliser le secret partagé pour chiffrer AES-256-GCM</span>
+<span class="cmd">openssl</span> enc <span class="flag">-aes-256-gcm</span> <span class="flag">-salt</span> <span class="flag">-pbkdf2</span> \
+    <span class="flag">-in</span> mon_certificat.pem \
+    <span class="flag">-out</span> mon_certificat_chiffre.enc \
+    <span class="flag">-pass</span> <span class="string">file:secret.bin</span></code></pre>
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-content">
+                <h4>Déchiffrer le certificat</h4>
+<pre><code><span class="comment"># Déchiffrer avec la clé privée ML-KEM</span>
+<span class="cmd">openssl</span> pkeyutl <span class="flag">-decap</span> <span class="flag">-inkey</span> kem_priv.pem \
+    <span class="flag">-encaps</span> <span class="string">cert_chiffre.bin</span> \
+    <span class="flag">-secret</span> <span class="string">secret_dechiffre.bin</span>
+
+<span class="comment"># Déchiffrer le certificat</span>
+<span class="cmd">openssl</span> enc <span class="flag">-d</span> <span class="flag">-aes-256-gcm</span> <span class="flag">-pbkdf2</span> \
+    <span class="flag">-in</span> mon_certificat_chiffre.enc \
+    <span class="flag">-out</span> mon_certificat_dechiffre.pem \
+    <span class="flag">-pass</span> <span class="string">file:secret_dechiffre.bin</span>
+
+<span class="comment"># Vérifier</span>
+<span class="cmd">openssl</span> x509 <span class="flag">-in</span> mon_certificat_dechiffre.pem <span class="flag">-text</span> <span class="flag">-noout</span></code></pre>
+            </div>
+        </div>
+
+        <div class="alert alert-warning">
+            <strong>&#9888; Note :</strong> ML-KEM est un algorithme d'encapsulation de clé, pas de chiffrement direct. Le flux typique est : ML-KEM encapsule une clé secrète, puis cette clé est utilisée pour chiffrer les données avec AES-256-GCM (chiffrement symétrique).
+        </div>
+    </section>
+
+    <!-- SSH -->
+    <section id="ssh">
+        <h2>8. SSH avec clés post-quantiques</h2>
+        <p>OpenSSH 9.x supporte les clés post-quantiques pour les échanges de clés.</p>
+
+        <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-content">
+                <h4>Installer OpenSSH avec support PQC</h4>
+<pre><code><span class="comment"># Vérifier la version d'OpenSSH</span>
+<span class="cmd">ssh</span> <span class="flag">-V</span>
+<span class="comment"># Nécessite OpenSSH 9.0+ pour le support natif des clés PQC</span>
+
+<span class="comment"># Sur Ubuntu 24.04+</span>
+<span class="cmd">sudo apt install</span> <span class="flag">-y</span> openssh-server
+
+<span class="comment"># Sur les systèmes plus anciens, compiler depuis les sources</span>
+<span class="cmd">git clone</span> <span class="string">https://github.com/openssh/openssh-portable.git</span>
+<span class="cmd">cd</span> openssh-portable
+<span class="cmd">autoreconf</span> <span class="flag">-i</span>
+<span class="cmd">./configure</span> <span class="flag">--with-ssh1</span>
+<span class="cmd">make</span>
+<span class="cmd">sudo make install</span></code></pre>
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-content">
+                <h4>Générer une clé SSH post-quantique</h4>
+<pre><code><span class="comment"># Générer une clé SSH avec ML-KEM pour l'échange de clés</span>
+<span class="comment"># OpenSSH utilise hybride PQC + classique par défaut</span>
+<span class="cmd">ssh-keygen</span> <span class="flag">-t</span> <span class="key">ssh-ed25519</span> <span class="flag">-O</span> <span class="string">"kex_algorithms=curve25519-sha256,ssh-userauth-pq@openquantumsafe.org:kem-ml-kem-768-sha256@openquantumsafe.org"</span>
+
+<span class="comment"># Ou utiliser le format natif pour le quantum-safe</span>
+<span class="cmd">ssh-keygen</span> <span class="flag">-t</span> <span class="key">ssh-mlkem768</span> <span class="flag">-f</span> <span class="string">~/.ssh/id_ml-kem</span>
+
+<span class="comment"># Alternative : clé hybride</span>
+<span class="cmd">ssh-keygen</span> <span class="flag">-t</span> <span class="key">ed25519</span> <span class="flag">-O</span> <span class="string">"kex-algorithms=curve25519-sha256,ml-kem-768-sha256"</span></code></pre>
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-content">
+                <h4>Configurer le serveur SSH pour le PQC</h4>
+<pre><code><span class="comment"># Éditer /etc/ssh/sshd_config</span>
+<span class="cmd">sudo nano</span> /etc/ssh/sshd_config
+
+<span class="comment"># Ajouter / modifier ces lignes :</span>
+<span class="key">KexAlgorithms</span> curve25519-sha256,ml-kem-768-sha256,diffie-hellman-group16-sha512
+<span class="key">HostKeyAlgorithms</span> ssh-ed25519,ssh-mlkem768,rsa-sha2-512
+<span class="key">PubkeyAcceptedAlgorithms</span> ssh-ed25519,ssh-mlkem768,rsa-sha2-512
+
+<span class="comment"># Redémarrer le service</span>
+<span class="cmd">sudo systemctl restart</span> sshd
+
+<span class="comment"># Tester la connexion</span>
+<span class="cmd">ssh</span> <span class="flag">-vv</span> <span class="flag">-o</span> <span class="string">"KexAlgorithms=ml-kem-768-sha256"</span> user@server</code></pre>
+            </div>
+        </div>
+
+        <div class="alert alert-success">
+            <strong>&#10004; Hybride recommandé :</strong> En production, utilisez des clés hybrides (classique + PQC). Si l'algorithme PQC est compromis, la sécurité classique reste intacte.
+        </div>
+    </section>
+
+    <!-- TLS 1.3 -->
+    <section id="tls13">
+        <h2>9. TLS 1.3 avec échange de clés PQC</h2>
+        <p>TLS 1.3 peut utiliser ML-KEM pour l'échange de clés durante la poignée de main.</p>
+
+        <h3>9.1 Configurer Nginx avec PQC</h3>
+
+<pre><code><span class="comment"># /etc/nginx/nginx.conf ou site-specific config</span>
+<span class="key">server</span> {
+    <span class="key">listen</span>       <span class="number">443</span> ssl;
+    <span class="key">server_name</span>  example.com;
+
+    <span class="comment"># Certificat signé avec ML-DSA</span>
+    <span class="key">ssl_certificate</span>     /etc/ssl/certs/server_mldsa65.crt;
+    <span class="key">ssl_certificate_key</span> /etc/ssl/private/server_mldsa65.key;
+
+    <span class="comment"># Support des groupes de clés PQC pour l'échange</span>
+    <span class="key">ssl_ecdh_curve</span> X25519MLKEM768:X25519Kyber768Draft00;
+
+    <span class="comment"># Cipher suites compatibles TLS 1.3 avec PQC</span>
+    <span class="key">ssl_conf_command</span> Ciphersuites TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256;
+
+    <span class="comment"># Support des groupes de clés hybrides</span>
+    <span class="key">ssl_groups</span> X25519MLKEM768:P-256:P-384;
+
+    <span class="key">location</span> / {
+        <span class="key">proxy_pass</span> http://localhost:8080;
+    }
+}</code></pre>
+
+        <h3>9.2 Tester la connexion TLS PQC</h3>
+<pre><code><span class="comment"># Tester avec openssl s_client</span>
+<span class="cmd">openssl</span> s_client <span class="flag">-connect</span> example.com:<span class="number">443</span> \
+    <span class="flag">-groups</span> <span class="string">X25519MLKEM768</span> \
+    <span class="flag">-ciphersuites</span> <span class="string">TLS_AES_256_GCM_SHA384</span>
+
+<span class="comment"># Vérifier les paramètres de la poignée de main</span>
+<span class="cmd">openssl</span> s_client <span class="flag">-connect</span> example.com:<span class="number">443</span> <span class="flag">-groups</span> <span class="string">X25519MLKEM768</span> 2&gt;&amp;1 | <span class="cmd">grep</span> <span class="string">"Server Temp Key"</span>
+<span class="comment"># Sortie attendue : Server Temp Key: X25519MLKEM768, ECDH, ...</span>
+
+<span class="comment"># Tester avec curl</span>
+<span class="cmd">curl</span> <span class="flag">--ciphers</span> <span class="string">TLS_AES_256_GCM_SHA384</span> \
+     <span class="flag">--tls13-ciphers</span> <span class="string">TLS_AES_256_GCM_SHA384</span> \
+     <span class="flag">-v</span> <span class="string">https://example.com</span></code></pre>
+    </section>
+
+    <!-- OpenSSL 4.0+ -->
+    <section id="openssl40">
+        <h2>10. OpenSSL 4.0+ : Support natif PQC</h2>
+        <p>OpenSSL 3.5 intègre le support natif des standards NIST ML-KEM (FIPS 203) et ML-DSA (FIPS 204).</p>
+
+        <h3>10.1 Commandes de chiffrement ML-KEM</h3>
+
+<pre><code><span class="comment"># Générer une clé ML-KEM-768</span>
+<span class="cmd">openssl</span> genpkey <span class="flag">-algorithm</span> ML-KEM-768 <span class="flag">-out</span> kem_key.pem
+
+<span class="comment"># Extraire la clé publique</span>
+<span class="cmd">openssl</span> pkey <span class="flag">-in</span> kem_key.pem <span class="flag">-pubout</span> <span class="flag">-out</span> kem_pub.pem
+
+<span class="comment"># Encapsuler une clé secrète (chiffrement côté client)</span>
+<span class="cmd">openssl</span> pkeyutl <span class="flag">-encap</span> <span class="flag">-inkey</span> kem_pub.pem \
+    <span class="flag">-out</span> <span class="string">ciphertext.bin</span> \
+    <span class="flag">-secret</span> <span class="string">shared_secret.bin</span>
+
+<span class="comment"># Décapsuler la clé secrète (déchiffrement côté serveur)</span>
+<span class="cmd">openssl</span> pkeyutl <span class="flag">-decap</span> <span class="flag">-inkey</span> kem_key.pem \
+    <span class="flag">-encaps</span> <span class="string">ciphertext.bin</span> \
+    <span class="flag">-secret</span> <span class="string">shared_secret.bin</span>
+
+<span class="comment"># Vérifier que les secrets sont identiques</span>
+<span class="cmd">diff</span> secret.bin shared_secret.bin && <span class="cmd">echo</span> <span class="string">"OK : Clé dérivée correctement"</span></code></pre>
+
+        <h3>10.2 Signatures ML-DSA</h3>
+
+<pre><code><span class="comment"># Générer une clé ML-DSA-65</span>
+<span class="cmd">openssl</span> genpkey <span class="flag">-algorithm</span> ML-DSA-65 <span class="flag">-out</span> dsa_key.pem
+
+<span class="comment"># Signer un fichier</span>
+<span class="cmd">openssl</span> pkeyutl <span class="flag">-sign</span> <span class="flag">-inkey</span> dsa_key.pem \
+    <span class="flag">-in</span> document.txt <span class="flag">-out</span> document.sig
+
+<span class="comment"># Vérifier la signature</span>
+<span class="cmd">openssl</span> pkeyutl <span class="flag">-verify</span> <span class="flag">-inkey</span> dsa_key.pem \
+    <span class="flag">-in</span> document.txt <span class="flag">-sigfile</span> document.sig</code></pre>
+
+        <h3>10.3 Créer une autorité de certification PQC</h3>
+<pre><code><span class="comment"># 1. Générer la clé CA (Autorité de Certification)</span>
+<span class="cmd">openssl</span> genpkey <span class="flag">-algorithm</span> ML-DSA-87 <span class="flag">-out</span> <span class="string">ca_mldsa.key</span>
+
+<span class="comment"># 2. Créer le certificat auto-signé de la CA</span>
+<span class="cmd">openssl</span> req <span class="flag">-new</span> <span class="flag">-x509</span> <span class="flag">-key</span> ca_mldsa.key \
+    <span class="flag">-out</span> <span class="string">ca_mldsa.crt</span> <span class="flag">-days</span> <span class="number">3650</span> \
+    <span class="flag">-subj</span> <span class="string">"/C=FR/O=MonOrganisme-CA/CN=Ma CA PQC"</span>
+
+<span class="comment"># 3. Générer la clé du serveur</span>
+<span class="cmd">openssl</span> genpkey <span class="flag">-algorithm</span> ML-DSA-65 <span class="flag">-out</span> <span class="string">serveur.key</span>
+
+<span class="comment"># 4. Créer le CSR du serveur</span>
+<span class="cmd">openssl</span> req <span class="flag">-new</span> <span class="flag">-key</span> serveur.key <span class="flag">-out</span> <span class="string">serveur.csr</span> \
+    <span class="flag">-subj</span> <span class="string">"/CN=www.example.com"</span>
+
+<span class="comment"># 5. Signer le certificat du serveur avec la CA</span>
+<span class="cmd">openssl</span> x509 <span class="flag">-req</span> <span class="flag">-in</span> serveur.csr \
+    <span class="flag">-CA</span> ca_mldsa.crt <span class="flag">-CAkey</span> ca_mldsa.key \
+    <span class="flag">-CAcreateserial</span> <span class="flag">-out</span> <span class="string">serveur.crt</span> <span class="flag">-days</span> <span class="number">365</span>
+
+<span class="comment"># 6. Vérifier la chaîne</span>
+<span class="cmd">openssl</span> verify <span class="flag">-CAfile</span> ca_mldsa.crt serveur.crt</code></pre>
+    </section>
+
+    <!-- COMMANDES -->
+    <section id="commandes">
+        <h2>11. Récapitulatif des commandes</h2>
+
+        <div class="grid">
+            <div class="card">
+                <h3>Génération de clés</h3>
+<pre><code><span class="comment"># ML-KEM (Kyber)</span>
+openssl genpkey -algorithm <span class="key">ML-KEM-512</span> -out key.pem
+openssl genpkey -algorithm <span class="key">ML-KEM-768</span> -out key.pem
+openssl genpkey -algorithm <span class="key">ML-KEM-1024</span> -out key.pem
+
+<span class="comment"># ML-DSA (Dilithium)</span>
+openssl genpkey -algorithm <span class="key">ML-DSA-44</span> -out key.pem
+openssl genpkey -algorithm <span class="key">ML-DSA-65</span> -out key.pem
+openssl genpkey -algorithm <span class="key">ML-DSA-87</span> -out key.pem
+
+<span class="comment"># Falcon</span>
+openssl genpkey -algorithm <span class="key">falcon512</span> -out key.pem
+openssl genpkey -algorithm <span class="key">falcon1024</span> -out key.pem</code></pre>
+            </div>
+
+            <div class="card">
+                <h3>Encapsulation / Décapsulation</h3>
+<pre><code><span class="comment"># Encapsuler (client)</span>
+openssl pkeyutl -encap \
+  -inkey pub.pem \
+  -out cipher.bin \
+  -secret secret.bin
+
+<span class="comment"># Décapsuler (serveur)</span>
+openssl pkeyutl -decap \
+  -inkey priv.pem \
+  -encaps cipher.bin \
+  -secret secret.bin</code></pre>
+            </div>
+
+            <div class="card">
+                <h3>Signature / Vérification</h3>
+<pre><code><span class="comment"># Signer</span>
+openssl pkeyutl -sign \
+  -inkey mldsa_key.pem \
+  -in file.txt \
+  -out file.sig
+
+<span class="comment"># Vérifier</span>
+openssl pkeyutl -verify \
+  -inkey mldsa_key.pem \
+  -in file.txt \
+  -sigfile file.sig</code></pre>
+            </div>
+
+            <div class="card">
+                <h3>Vérification de certificats</h3>
+<pre><code><span class="comment"># Info certificat</span>
+openssl x509 -in cert.pem -text -noout
+
+<span class="comment"># Vérifier signature</span>
+openssl verify -CAfile ca.pem cert.pem
+
+<span class="comment"># Voir l'algorithme utilisé</span>
+openssl x509 -in cert.pem \
+  -text -noout | grep -A2 "Public Key Algorithm"</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- BONNES PRATIQUES -->
+    <section id="bonnes-pratiques">
+        <h2>12. Bonnes pratiques</h2>
+
+        <div class="grid">
+            <div class="card">
+                <h3>&#10004; Migration hybride</h3>
+                <p>Utilisez des clés hybrides (classique + PQC) pendant la transition. Cela protège contre les compromissions futures de l'un ou l'autre algorithme.</p>
+            </div>
+            <div class="card">
+                <h3>&#128737; Niveaux de sécurité</h3>
+                <p>Pour la sécurité maximale, utilisez ML-KEM-1024 ou ML-DSA-87. Pour un bon compromis performance/sécurité, ML-KEM-768 / ML-DSA-65 est recommandé.</p>
+            </div>
+            <div class="card">
+                <h3>&#128190; Stockage des clés</h3>
+                <p>Protégez les clés privées avec des modules HSM ou des fichiers chiffrés. Les clés post-quantiques sont plus volumineuses, adaptez votre infrastructure.</p>
+            </div>
+            <div class="card">
+                <h3>&#128269; Audit et logging</h3>
+                <p>Tenez un inventaire de tous les certificats PQC. Surveillez les algorithmes utilisés dans vos infrastructures avec des outils de monitoring.</p>
+            </div>
+            <div class="card">
+                <h3>&#9889; Performance</h3>
+                <p>Les algorithmes PQC sont plus coûteux en CPU et en bande passante. Testez les performances avant de déployer en production. Les signatures SPHINCS+ sont particulièrement lentes.</p>
+            </div>
+            <div class="card">
+                <h3>&#128221; Références</h3>
+                <ul>
+                    <li><a href="https://www.nist.gov/post-quantum-cryptography" target="_blank">NIST PQC Standards</a></li>
+                    <li><a href="https://openquantumsafe.org" target="_blank">Open Quantum Safe</a></li>
+                    <li><a href="https://www.openssl.org/docs/man3.5/" target="_blank">OpenSSL 3.5 Documentation</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="alert alert-info">
+            <strong>&#128640; Prochaines étapes :</strong> Commencez par évaluer votre inventaire de certificats, testez les algorithmes PQC en environnement de développement, puis planifiez une migration hybride progressive vers la production.
+        </div>
+    </section>
+
+</div>
+
+<footer>
+    <p>Guide Algorithmes Post-Quantiques pour Certificats sous Linux &mdash; Dernière mise à jour : 08 Septembre 2026</p>
+    <p>Références : NIST FIPS 203/204/205 &bull; OpenSSL 4.0+ &bull; Open Quantum Safe by IndomptableBar</p>
+</footer>
+
+</body>
+</html>
