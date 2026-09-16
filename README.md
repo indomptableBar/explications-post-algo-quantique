@@ -78,11 +78,11 @@ Le problème RSA / ECC
 
 Les systèmes classiques utilisent notamment :
 
-RSA
- └── Factorisation
+    RSA
+     └── Factorisation
 
-ECC / ECDSA / ECDH
- └── Logarithme discret sur courbes elliptiques
+    ECC / ECDSA / ECDH
+     └── Logarithme discret sur courbes elliptiques
 
 Un ordinateur quantique suffisamment puissant pourrait exploiter l'algorithme de Shor pour résoudre efficacement ces problèmes.
 
@@ -102,32 +102,33 @@ Harvest Now, Decrypt Later
 
 Une menace particulièrement importante consiste à :
 
-Aujourd'hui
-     │
-     ▼
-Données chiffrées
-     │
-     │ stockage
-     ▼
-┌──────────────────────┐
-│ Attaquant            │
-│ conserve les données │
-└──────────────────────┘
-     │
-     │ ordinateur quantique
-     ▼
-Déchiffrement futur
+    Aujourd'hui
+         │
+         ▼
+    Données chiffrées
+         │
+         │ stockage
+         ▼
+    ┌──────────────────────┐
+    │ Attaquant            │
+    │ conserve les données │
+    └──────────────────────┘
+         │
+         │ ordinateur quantique
+         ▼
+    Déchiffrement futur
 
 Les données nécessitant une confidentialité à long terme peuvent donc justifier une migration cryptographique anticipée.
 🔐 Algorithmes couverts
 Algorithme	Type	Utilisation
-ML-KEM	KEM	Échange / encapsulation de clés
-ML-DSA	Signature	Certificats, signatures
-SLH-DSA	Signature	Signature basée sur le hachage
-Falcon	Signature	Signatures compactes
-AES-256-GCM	Symétrique	Chiffrement des données
-X25519MLKEM768	KEX hybride	TLS / échange de clés
-ML-KEM
+
+    ML-KEM	KEM	Échange / encapsulation de clés
+    ML-DSA	Signature	Certificats, signatures
+    SLH-DSA	Signature	Signature basée sur le hachage
+    Falcon	Signature	Signatures compactes
+    AES-256-GCM	Symétrique	Chiffrement des données
+    X25519MLKEM768	KEX hybride	TLS / échange de clés
+    ML-KEM
 
 ML-KEM est un mécanisme d'encapsulation de clé (KEM).
 
@@ -172,10 +173,11 @@ En contrepartie, les signatures peuvent être beaucoup plus volumineuses.
 🏛️ Standards NIST
 
 Les premiers standards PQC du NIST ont été publiés en 2024.
-Standard	Algorithme	Fonction
-FIPS 203	ML-KEM	Encapsulation de clés
-FIPS 204	ML-DSA	Signature numérique
-FIPS 205	SLH-DSA	Signature numérique
+
+    Standard	Algorithme	Fonction
+    FIPS 203	ML-KEM	Encapsulation de clés
+    FIPS 204	ML-DSA	Signature numérique
+    FIPS 205	SLH-DSA	Signature numérique
 
     ℹ️ Les noms historiques Kyber, Dilithium et SPHINCS+ sont encore très couramment utilisés dans la documentation et les implémentations. Les noms normalisés NIST sont respectivement ML-KEM, ML-DSA et SLH-DSA.
 
