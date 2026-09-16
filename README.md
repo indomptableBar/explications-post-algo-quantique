@@ -1,53 +1,54 @@
 Algorithmes Post-Quantiques pour Certificats sous Linux
 
-Guide pratique pour comprendre, tester et intégrer les algorithmes cryptographiques post-quantiques (PQC) dans les environnements Linux, notamment pour les certificats, TLS 1.3, SSH et les échanges de clés.
+Guide pratique pour comprendre, tester et intégrer les algorithmes cryptographiques post-quantiques (PQC)
+dans les environnements Linux, notamment pour les certificats, TLS 1.3, SSH et les échanges de clés.
 
 
 
 
-📋 Sommaire
+    📋 Sommaire
 
-À propos
+    À propos
 
-Pourquoi le post-quantique ?
+    Pourquoi le post-quantique ?
 
-Algorithmes couverts
+    Algorithmes couverts
 
-Standards NIST
+    Standards NIST
 
-Prérequis
+    Prérequis
 
-Installation
+    Installation
 
-OpenSSL
+    OpenSSL
 
-liboqs
+    liboqs
 
-OQS-OpenSSL
+    OQS-OpenSSL
 
-ML-DSA et certificats
+    ML-DSA et certificats
 
-ML-KEM et chiffrement hybride
+    ML-KEM et chiffrement hybride
 
-TLS 1.3
+    TLS 1.3
 
-SSH
+    SSH
 
-Créer une autorité de certification PQC
+    Créer une autorité de certification PQC
 
-Vérification et diagnostic
+    Vérification et diagnostic
 
-Tailles des clés et signatures
+    Tailles des clés et signatures
 
-Bonnes pratiques
+    Bonnes pratiques
 
-Limites et compatibilité
+    Limites et compatibilité
 
-Références
+    Références
 
-Licence
+    Licence
 
-📖 À propos
+    📖 À propos
 
 Les Post-Quantum Cryptographic Algorithms (PQC) sont conçus pour rester sûrs face à des ordinateurs quantiques suffisamment puissants.
 
