@@ -241,7 +241,7 @@ Puis récupérer une version officielle d'OpenSSL correspondant à votre besoin 
 
 Exemple :
 
-wget [https://github.com/openssl/openssl/releases/download/openssl-3.5.0/openssl-3.5.0.tar.gz](https://github.com/openssl/openssl/releases/download/openssl-4.0.2/openssl-4.0.2.tar.gz)
+wget [[https://github.com/openssl/openssl/releases/download/openssl-3.5.0/openssl-3.5.0.tar.gz](https://github.com/openssl/openssl/releases/download/openssl-4.0.2/openssl-4.0.2.tar.gz)]
 
 tar -xzf openssl-4.0.2.tar.gz
 cd openssl-4.02
