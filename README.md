@@ -1,7 +1,7 @@
 <img src="linux-post-quantique.png" align="center"/>
 
 
-''Algorithmes Post-Quantiques pour Certificats sous Linux''
+Algorithmes Post-Quantiques pour Certificats sous Linux
 
 Guide pratique pour comprendre, tester et intégrer les algorithmes cryptographiques post-quantiques (PQC)
 dans les environnements Linux, notamment pour les certificats, TLS 1.3, SSH et les échanges de clés.
