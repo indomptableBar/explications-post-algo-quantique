@@ -243,15 +243,15 @@ Exemple :
 
 wget [[https://github.com/openssl/openssl/releases/download/openssl-3.5.0/openssl-3.5.0.tar.gz](https://github.com/openssl/openssl/releases/download/openssl-4.0.2/openssl-4.0.2.tar.gz)]
 
-tar -xzf openssl-4.0.2.tar.gz
-cd openssl-4.02
+    tar -xzf openssl-4.0.2.tar.gz
+    cd openssl-4.02
 
-./Configure \
+    ./Configure \
     --prefix=/usr/local/openssl
 
-make -j"$(nproc)"
+    make -j"$(nproc)"
 
-sudo make install
+    sudo make install
 
 Vérifier :
 
